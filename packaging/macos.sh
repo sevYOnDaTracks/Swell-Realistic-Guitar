@@ -10,14 +10,21 @@ trap 'rm -rf "$stage"' EXIT
 product='Swell Realistic guitar'
 root="$stage/root"
 mkdir -p "$root/Library/Audio/Plug-Ins/VST3" "$root/Library/Application Support/Swell/Realistic Guitar" "$stage/resources"
-destination="$root/Library/Audio/Plug-Ins/VST3/$product.vst3"
-ditto --norsrc --noextattr "$release/VST3/$product.vst3" "$destination"
+while IFS='|' read -r source folder extension; do
+    mkdir -p "$root/$folder"
+    destination="$root/$folder/$product.$extension"
+    ditto --norsrc --noextattr "$release/$source/$product.$extension" "$destination"
 if [[ -n "${APP_IDENTITY:-}" ]]; then
     codesign --force --options runtime --timestamp --sign "$APP_IDENTITY" "$destination"
 else
     codesign --force --sign - "$destination"
 fi
 codesign --verify --strict "$destination"
+done <<'BUNDLES'
+VST3|Library/Audio/Plug-Ins/VST3|vst3
+AU|Library/Audio/Plug-Ins/Components|component
+Standalone|Applications|app
+BUNDLES
 install -m 644 "$here/README.txt" "$root/Library/Application Support/Swell/Realistic Guitar/README.txt"
 cp "$here/README.txt" "$stage/resources/README.txt"
 xattr -cr "$root"

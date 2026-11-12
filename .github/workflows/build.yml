@@ -36,7 +36,7 @@ jobs:
         run: cmake -S . -B build -DJUCE_DIR="${{ github.workspace }}/JUCE"
 
       - name: Build
-        run: cmake --build build --target SwellGuitar_VST3 --config Release --parallel 3
+        run: cmake --build build --target SwellGuitar_All --config Release --parallel 3
 
       - name: Package (macOS)
         if: runner.os == 'macOS'
@@ -60,7 +60,7 @@ jobs:
           if ($install.ExitCode -ne 0) { throw "Installer returned $($install.ExitCode)" }
           $name = 'Swell Realistic guitar'
           $vst = "$env:CommonProgramFiles\VST3\$name.vst3\Contents\x86_64-win\$name.vst3"
-          foreach ($file in @("$env:ProgramFiles\Swell\Realistic Guitar\README.txt", "$env:ProgramFiles\Swell\Realistic Guitar\Uninstall.exe", $vst)) {
+          foreach ($file in @("$env:ProgramFiles\Swell\Realistic Guitar\$name.exe", "$env:ProgramFiles\Swell\Realistic Guitar\README.txt", "$env:ProgramFiles\Swell\Realistic Guitar\Uninstall.exe", $vst)) {
             if (!(Test-Path -LiteralPath $file -PathType Leaf)) { throw "Missing $file" }
           }
           Write-Host "Verified x64 VST3, README and uninstaller."

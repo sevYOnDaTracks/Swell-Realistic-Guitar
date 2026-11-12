@@ -19,12 +19,18 @@ FetchContent_MakeAvailable(monocypher)
 add_library(monocypher STATIC "${monocypher_SOURCE_DIR}/src/monocypher.c" "${monocypher_SOURCE_DIR}/src/optional/monocypher-ed25519.c")
 target_include_directories(monocypher PUBLIC "${monocypher_SOURCE_DIR}/src" "${monocypher_SOURCE_DIR}/src/optional")
 set_target_properties(monocypher PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set(guitar_formats VST3 Standalone)
+if(APPLE)
+    list(APPEND guitar_formats AU)
+endif()
+
 juce_add_plugin(SwellGuitar
     COMPANY_NAME "Swell Audio" BUNDLE_ID audio.swell.realisticguitar
     PLUGIN_MANUFACTURER_CODE Swel PLUGIN_CODE SgWv
     PRODUCT_NAME "Swell Realistic guitar"
     IS_SYNTH TRUE NEEDS_MIDI_INPUT TRUE NEEDS_MIDI_OUTPUT FALSE
-    EDITOR_WANTS_KEYBOARD_FOCUS FALSE FORMATS VST3
+    EDITOR_WANTS_KEYBOARD_FOCUS FALSE FORMATS ${guitar_formats}
+    ICON_BIG Assets/guitar-icon.png
     VST3_CATEGORIES Instrument Sampler COPY_PLUGIN_AFTER_BUILD FALSE)
 juce_add_binary_data(GuitarArt SOURCES Assets/studio.jpg Assets/swell_mark.png
     Assets/unbounded_extrabold.ttf Assets/unbounded_medium.ttf Assets/geist_regular.ttf Assets/geist_semibold.ttf)
