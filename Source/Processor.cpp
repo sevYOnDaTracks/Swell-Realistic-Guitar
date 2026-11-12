@@ -384,6 +384,7 @@ void Processor::renderPart(AudioBuffer<float>& buf,int start,int length){
 }
 void Processor::processBlock(AudioBuffer<float>& buf,MidiBuffer& midi){
     ScopedNoDenormals noDenormals;buf.clear();
+    if(!licence->isUnlocked()){midi.clear();return;}
     int which=selection();
     if(isNonRealtime() && (loaded.load()!=which || readyRevision.load()!=pathRevision.load())){
         for(int i=0;i<15000 && (loaded.load()!=which || readyRevision.load()!=pathRevision.load());++i){

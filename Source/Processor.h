@@ -1,6 +1,7 @@
 #pragma once
 #include "Bank.h"
 #include "Compressor.h"
+#include "Licence/SwellLicence.h"
 #include <juce_audio_utils/juce_audio_utils.h>
 namespace guitar {
 class Processor final : public juce::AudioProcessor, private juce::Thread {
@@ -8,6 +9,7 @@ public:
     Processor(); ~Processor() override;
     juce::AudioProcessorValueTreeState params;
     juce::MidiKeyboardState keyboard;
+    juce::SharedResourcePointer<swell::Licence> licence;
     std::array<std::atomic<int>,6> frets;
     // Fretting-hand position: lowest fret under the index finger (0 = open position).
     // Same rules as the Ilya Efimov script: a 4-fret playing position (the orange bar),

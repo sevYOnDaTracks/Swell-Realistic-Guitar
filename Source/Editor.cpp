@@ -186,6 +186,7 @@ public:
         addAndMakeVisible(stroke);stroke.addItemList({"Down","Up","Alternate"},1);strokeAttach=std::make_unique<CA>(proc.params,"stroke",stroke);
         addAndMakeVisible(spread);spread.setSliderStyle(Slider::LinearHorizontal);spread.setTextBoxStyle(Slider::NoTextBox,false,0,0);
         spread.setTooltip(u("Espacement entre deux cordes"));spreadAttach=std::make_unique<SA>(proc.params,"spread",spread);
+        addAndMakeVisible(licenceBadge);licenceBadge.setFontHeight(11.f);
         addAndMakeVisible(keys);addChildComponent(board);addAndMakeVisible(pitch);addAndMakeVisible(mod);
         wheels[0]=std::make_unique<SA>(proc.params,"wheel",pitch);wheels[1]=std::make_unique<SA>(proc.params,"mod",mod);
         pitch.setTooltip("Pitch bend");mod.setTooltip("Vibrato");
@@ -233,6 +234,7 @@ public:
         if(!folder)return;
         back->setBounds(417,18,29,30);next->setBounds(670,18,29,30);preset.setBounds(449,20,215,26);
         folder->setBounds(944,17,33,32);view->setBounds(983,17,33,32);
+        licenceBadge.setBounds(700,56,316,16);
         for(int i=0;i<4;++i)modelsUI[i]->setBounds(18,126+i*31,159,29);
         for(int i=0;i<7;++i)knobs[i].setBounds(225+i*118,235,61,66);
         for(int i=0;i<9;++i)artsUI[i]->setBounds(25+(i%3)*93,381+(i/3)*28,90,25);
@@ -287,6 +289,8 @@ private:
     std::unique_ptr<Cell> back,next,folder,view,modeButton,handNoise;std::unique_ptr<BA> handNoiseAttach;ComboBox preset,stroke;Slider spread;
     std::unique_ptr<CA> strokeAttach;std::unique_ptr<SA> spreadAttach;
     std::unique_ptr<FileChooser> chooser;TooltipWindow tips{this,600};int current=0;bool showBoard=false;
+    swell::LicenceBadge licenceBadge{muted,gold};
+    swell::LicenceGuard licenceGuard{*this,swell::LicencePanel::Style{black,slate,ink,muted,gold,Colour(0xffde8d71)}};
 };
 }
 AudioProcessorEditor* Processor::createEditor(){return new Editor(*this);}

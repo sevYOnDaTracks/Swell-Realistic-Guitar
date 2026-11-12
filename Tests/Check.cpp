@@ -12,7 +12,7 @@ static void play(Processor& p,MidiBuffer& midi,double* energy=nullptr,int size=2
 }
 int main(int argc,char** argv) {
  try {
-    ScopedJuceInitialiser_GUI init;Processor p;p.prepareToPlay(48000,256);p.setNonRealtime(true);
+    ScopedJuceInitialiser_GUI init;swell::Licence::unlockForTesting();Processor p;p.prepareToPlay(48000,256);p.setNonRealtime(true);
     const bool preview=argc==2;
     for(int pass: {1,0,2,3,4,5,6,7}){
         const int sel=preview?5:pass;
