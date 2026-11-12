@@ -1,0 +1,86 @@
+name: Build installers
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+env:
+  VERSION: 1.0.0
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS
+            os: macos-latest
+          - name: Windows
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get JUCE 8.0.4
+        run: git clone --depth 1 --branch 8.0.4 https://github.com/juce-framework/JUCE.git JUCE
+
+      - name: Configure (macOS universal)
+        if: runner.os == 'macOS'
+        run: cmake -S . -B build -DJUCE_DIR="$PWD/JUCE" -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0
+
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        run: cmake -S . -B build -DJUCE_DIR="${{ github.workspace }}/JUCE"
+
+      - name: Build
+        run: cmake --build build --target SwellGuitar_VST3 --config Release --parallel 3
+
+      - name: Package (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p installers
+          lipo -archs "build/SwellGuitar_artefacts/Release/VST3/Swell Realistic guitar.vst3/Contents/MacOS/Swell Realistic guitar"
+          bash packaging/macos.sh build/SwellGuitar_artefacts/Release "$PWD/installers/Swell-Realistic-Guitar-$VERSION-macOS.pkg"
+
+      - name: Package and test installer (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $nsis = Join-Path ${env:ProgramFiles(x86)} 'NSIS\makensis.exe'
+          if (!(Test-Path $nsis)) { choco install nsis -y --no-progress }
+          New-Item -ItemType Directory -Force installers | Out-Null
+          $output = Join-Path $PWD "installers\Swell-Realistic-Guitar-$env:VERSION-Windows-x64.exe"
+          & $nsis "/DBUILD=$PWD\build\SwellGuitar_artefacts\Release" "/DOUTPUT=$output" packaging\windows.nsi
+          if ($LASTEXITCODE -ne 0) { throw "Installer build failed" }
+          $install = Start-Process $output -ArgumentList '/S' -Wait -PassThru
+          if ($install.ExitCode -ne 0) { throw "Installer returned $($install.ExitCode)" }
+          $name = 'Swell Realistic guitar'
+          $vst = "$env:CommonProgramFiles\VST3\$name.vst3\Contents\x86_64-win\$name.vst3"
+          foreach ($file in @("$env:ProgramFiles\Swell\Realistic Guitar\README.txt", "$env:ProgramFiles\Swell\Realistic Guitar\Uninstall.exe", $vst)) {
+            if (!(Test-Path -LiteralPath $file -PathType Leaf)) { throw "Missing $file" }
+          }
+          Write-Host "Verified x64 VST3, README and uninstaller."
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Swell-Realistic-Guitar-${{ matrix.name }}
+          path: installers/*
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
