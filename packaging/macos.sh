@@ -4,7 +4,7 @@ set -euo pipefail
 release=$(cd "$1" && pwd)
 out="$2"
 here=$(cd "$(dirname "$0")" && pwd)
-version=1.0.0
+version=1.0.1
 stage=$(mktemp -d)
 trap 'rm -rf "$stage"' EXIT
 product='Swell Realistic guitar'

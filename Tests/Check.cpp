@@ -20,6 +20,22 @@ int main(int argc,char** argv) {
         set(p,"model",sel/2);set(p,"mode",sel%2);
         MidiBuffer midi;play(p,midi);
         require(p.loaded==sel && p.missing==0,"bank failed "+std::to_string(sel));
+        if (!preview && sel >= 4) {
+            set(p,"art",1);
+            set(p,"handNoise",0);
+            for (int note : {40, 52, 64})
+                for (int velocity : {12, 32, 64, 100, 127}) {
+                    for (int repeat = 0; repeat < 2; ++repeat) {
+                        midi.addEvent(MidiMessage::allSoundOff(1),0); play(p,midi);
+                        midi.addEvent(MidiMessage::noteOn(1,note,(uint8)velocity),0);
+                        double tailEnergy = 0;
+                        for (int block = 0; block < 24; ++block)
+                            play(p,midi,block >= 8 ? &tailEnergy : nullptr);
+                        require(tailEnergy > .000001, "muted note lost its tail: " + std::to_string(sel) + "/" + std::to_string(note) + "/" + std::to_string(velocity));
+                    }
+                }
+            set(p,"handNoise",1);
+        }
         for(int art=0;art<(preview?1:(int)guitar::arts.size());++art){
             set(p,"art",art);
             midi.addEvent(MidiMessage::allSoundOff(1),0);

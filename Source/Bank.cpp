@@ -1,10 +1,23 @@
 #include "Bank.h"
 #include <sstream>
+#include <unordered_set>
 #include <chrono>
 namespace guitar {
 static const char catalogue[] =
 #include "Catalog.inc"
 ;
+// Measured from the shipped WAVs; only the electric palm-mute articulation uses this list.
+static const auto mutedTakeExclusions = [] {
+    const char* entries =
+#include "MutedTakeExclusions.inc"
+    ;
+    std::istringstream input(entries);
+    std::unordered_set<std::string> result;
+    for (std::string line; std::getline(input, line);)
+        if (!line.empty()) result.insert(line);
+    return result;
+}();
+
 static std::unique_ptr<juce::AudioFormatReader> openWave(const juce::File& file) {
     juce::WavAudioFormat wav;
     if (auto input = file.createInputStream())
@@ -40,6 +53,7 @@ bool Bank::load(const juce::File& root,const std::function<bool()>& cancel,std::
         record.get();
         std::string name;
         std::getline(record,name);
+        if (art == 1 && mutedTakeExclusions.count(std::to_string(id) + "\t" + name)) continue;
         auto source = (id==selection ? folder : root.getChildFile(model).getChildFile(model+" Samples"));
         auto file = source.getChildFile(juce::String::fromUTF8(name.c_str()));
         auto r = openWave(file);
@@ -95,6 +109,7 @@ int Bank::choose(int art,int note,int string,float velocity,unsigned repeat) con
     if (art==9 || art==5 || art==scratchArt) return g[repeat%g.size()];
     float norm=juce::jlimit(0.f,1.f,(velocity-.12f)/.88f);
     int i=juce::roundToInt(norm*((int)g.size()-1));
+    if (art == 1 && selection >= 4) return g[(size_t)i];
     if ((repeat&1u) && g.size()>3) i += (i+1<(int)g.size()?1:-1);
     return g[(size_t)i];
 }
