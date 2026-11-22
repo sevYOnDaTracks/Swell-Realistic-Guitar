@@ -10,17 +10,24 @@ trap 'rm -rf "$stage"' EXIT
 product='Swell Realistic guitar'
 root="$stage/root"
 mkdir -p "$root/Library/Audio/Plug-Ins/VST3" "$root/Library/Application Support/Swell/Realistic Guitar" "$stage/resources"
-destination="$root/Library/Audio/Plug-Ins/VST3/$product.vst3"
-ditto --norsrc --noextattr "$release/VST3/$product.vst3" "$destination"
-if [[ -n "${APP_IDENTITY:-}" ]]; then
-    codesign --force --options runtime --timestamp --sign "$APP_IDENTITY" "$destination"
-else
-    codesign --force --sign - "$destination"
-fi
-codesign --verify --strict "$destination"
+# VST3 always; AU and the standalone app when they were built.
+targets=("VST3/$product.vst3:Library/Audio/Plug-Ins/VST3" "AU/$product.component:Library/Audio/Plug-Ins/Components" "Standalone/$product.app:Applications")
+for t in "${targets[@]}"; do
+    src="$release/${t%%:*}"; dir="$root/${t#*:}"
+    [[ -e "$src" ]] || { [[ "$t" == VST3* ]] && { echo "Missing $src"; exit 1; }; continue; }
+    mkdir -p "$dir"; destination="$dir/$(basename "$src")"
+    ditto --norsrc --noextattr "$src" "$destination"
+    find "$destination" -name '._*' -delete
+    if [[ -n "${APP_IDENTITY:-}" ]]; then
+        codesign --force --deep --options runtime --timestamp --sign "$APP_IDENTITY" "$destination"
+    else
+        codesign --force --deep --sign - "$destination"
+    fi
+    codesign --verify --strict "$destination"
+done
 install -m 644 "$here/README.txt" "$root/Library/Application Support/Swell/Realistic Guitar/README.txt"
 cp "$here/README.txt" "$stage/resources/README.txt"
-xattr -cr "$root"
+xattr -cr "$root" 2>/dev/null || true
 export COPYFILE_DISABLE=1
 pkgbuild --analyze --root "$root" "$stage/components.plist"
 /usr/bin/python3 - "$stage/components.plist" <<'PY'

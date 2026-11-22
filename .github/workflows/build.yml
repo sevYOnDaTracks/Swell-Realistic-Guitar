@@ -36,7 +36,7 @@ jobs:
         run: cmake -S . -B build -DJUCE_DIR="${{ github.workspace }}/JUCE"
 
       - name: Build
-        run: cmake --build build --target SwellGuitar_VST3 --config Release --parallel 3
+        run: cmake --build build --target SwellGuitar_All --config Release --parallel 3
 
       - name: Package (macOS)
         if: runner.os == 'macOS'

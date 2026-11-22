@@ -115,6 +115,7 @@ private:
     juce::Reverb reverb;
     float lastReverb=-1;
     float attackSeconds=.0015f;
+    static constexpr double chordWindow=.020;   // chord-gathering wait, reported as latency
     double manualBend=1;
     float manualMod=0;
     juce::SmoothedValue<float> gain, cutoff;
