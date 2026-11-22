@@ -1,4 +1,4 @@
-Swell Realistic Guitar 1.0.1
+Swell Realistic Guitar 1.0.2
 ============================
 
 Application autonome et instrument VST3 (macOS 12+ Apple Silicon et Intel, Windows 10/11 64 bits).

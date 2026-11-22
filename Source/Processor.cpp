@@ -67,6 +67,7 @@ void Processor::resetVoices(){
 }
 void Processor::prepareToPlay(double sr,int){
     const SpinLock::ScopedLockType l(bankLock);rate=sr;timeline=0;resetVoices();keyboard.reset();
+    setLatencySamples((int)std::lround(sr*chordWindow));
     echoLine.setSize(2,(int)std::ceil(rate*.375)+2);echoLine.clear();
     chorusLine.setSize(2,(int)std::ceil(rate*.04)+2);chorusLine.clear();
     echoPos=chorusPos=0;chorusPhase=0;lastReverb=-1;
@@ -194,8 +195,9 @@ void Processor::message(const MidiMessage& m){
     if(m.isNoteOff() && keySwitch(ch,m.getNoteNumber(),m.getVelocity(),false))return;
     if(m.isNoteOn()){
         int n=m.getNoteNumber();auto vel=m.getFloatVelocity();
-        // Pick mode waits 20 ms (Efimov "Chord mode A") so the notes of a chord share one position.
-        const double window=(selection()&1)?.008:.020;
+        // Notes wait chordWindow (Efimov "Chord mode A") so the notes of a chord share one position;
+        // that wait is reported to the host as latency, so the guitar still lands on the beat.
+        const double window=chordWindow;
         for(auto& p:pending)if(!p.phase){p={1,n,ch,-1,vel,timeline,timeline+(int64_t)(rate*window),-1};return;}
         launch(ch,n,vel);
     }else if(m.isNoteOff())keyUp(ch,m.getNoteNumber());

@@ -8,7 +8,7 @@ Unicode true
 !error "Set OUTPUT to the installer file"
 !endif
 !define PRODUCT "Swell Realistic guitar"
-!define VERSION "1.0.1"
+!define VERSION "1.0.2"
 !define REGKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\SwellRealisticGuitar"
 Icon "..\Assets\guitar-icon.ico"
 Name "Swell Realistic Guitar ${VERSION}"
